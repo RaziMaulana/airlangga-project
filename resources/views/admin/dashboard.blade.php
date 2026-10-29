@@ -5,7 +5,7 @@
 
         @include('components.sidebar')
 
-        <main class="flex-1 ml-64 p-4 sm:p-6 lg:p-10 w-full max-w-full overflow-x-hidden">
+        <main class="flex-1 w-full max-w-full overflow-x-hidden p-4 pt-20 sm:p-6 sm:pt-24 lg:ml-64 lg:p-10">
 
             <div class="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mt-2 sm:mt-0">
                 <div>
@@ -221,23 +221,54 @@
                 <p class="text-xs text-black/50 plus-jakarta-sans-reguler text-center sm:text-left">
                     Menampilkan ${pagination.from ?? 0}-${pagination.to ?? 0} dari ${pagination.total ?? 0} data
                 </p>
-                <div class="flex items-center justify-center sm:justify-end gap-1.5">
+                <div class="flex items-center justify-center sm:justify-end gap-1.5 flex-wrap">
                     <button data-page="${pagination.current_page - 1}" ${pagination.current_page === 1 ? 'disabled' : ''}
                         class="pagination-btn rounded-xl border border-black/10 bg-white px-3 py-2 text-xs text-black plus-jakarta-sans-reguler transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/5">
                         Prev
                     </button>`;
 
-                for (let i = 1; i <= pagination.last_page; i++) {
-                    const active = i === pagination.current_page;
-                    html += `
-                    <button data-page="${i}"
-                        class="pagination-btn rounded-xl px-3.5 py-2 text-xs transition-colors plus-jakarta-sans-reguler ${active ? 'bg-black text-white font-bold' : 'border border-black/10 bg-white text-black hover:bg-black/5'}">
-                        ${i}
-                    </button>`;
+                // Logika pembatasan halaman agar tidak overflow
+                const currentPage = pagination.current_page;
+                const lastPage = pagination.last_page;
+                const delta = 2;
+                const range = [];
+                const rangeWithDots = [];
+                let l;
+
+                for (let i = 1; i <= lastPage; i++) {
+                    if (i === 1 || i === lastPage || (i >= currentPage - delta && i <= currentPage + delta)) {
+                        range.push(i);
+                    }
                 }
 
+                range.forEach(i => {
+                    if (l) {
+                        if (i - l === 2) {
+                            rangeWithDots.push(l + 1);
+                        } else if (i - l !== 1) {
+                            rangeWithDots.push('...');
+                        }
+                    }
+                    rangeWithDots.push(i);
+                    l = i;
+                });
+
+                rangeWithDots.forEach(page => {
+                    if (page === '...') {
+                        html +=
+                            `<span class="inline-flex h-8 w-8 items-center justify-center text-xs text-black/40">...</span>`;
+                    } else {
+                        const active = page === currentPage;
+                        html += `
+                        <button data-page="${page}"
+                            class="pagination-btn rounded-xl h-8 w-8 inline-flex items-center justify-center text-xs transition-colors plus-jakarta-sans-reguler ${active ? 'bg-black text-white font-bold border border-black shadow-sm' : 'border border-black/10 bg-white text-black hover:bg-black/5'}">
+                            ${page}
+                        </button>`;
+                    }
+                });
+
                 html += `
-                    <button data-page="${pagination.current_page + 1}" ${pagination.current_page === pagination.last_page ? 'disabled' : ''}
+                    <button data-page="${pagination.current_page + 1}" ${pagination.current_page === lastPage ? 'disabled' : ''}
                         class="pagination-btn rounded-xl border border-black/10 bg-white px-3 py-2 text-xs text-black plus-jakarta-sans-reguler transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-black/5">
                         Next
                     </button>

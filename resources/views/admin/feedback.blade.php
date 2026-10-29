@@ -4,13 +4,14 @@
     <div class="flex min-h-screen bg-[#F5F5F4]">
         @include('components.sidebar')
 
-        <main class="ml-64 flex-1 p-8 lg:p-10">
+        <main class="w-full flex-1 p-4 pt-20 sm:p-6 sm:pt-24 lg:ml-64 lg:p-10">
 
             <div class="mb-8">
-                <p class="text-xs font-semibold uppercase tracking-[0.25em] text-black/40 plus-jakarta-sans-bold">
+                <p
+                    class="text-[10px] font-semibold uppercase tracking-[0.25em] text-black/40 plus-jakarta-sans-bold sm:text-xs">
                     Masukan pengguna
                 </p>
-                <h1 class="mt-1 font-serif text-4xl italic text-black">
+                <h1 class="mt-1 font-serif text-3xl italic text-black sm:text-4xl">
                     Saran
                 </h1>
             </div>
@@ -24,7 +25,7 @@
                         Total Masukan
                     </p>
 
-                    <h2 class="mt-4 font-serif text-5xl text-black">
+                    <h2 class="mt-4 font-serif text-4xl text-black sm:text-5xl">
                         {{ $feedbacks->count() }}
                     </h2>
 
@@ -43,7 +44,7 @@
                         </p>
                     </div>
 
-                    <h2 class="mt-4 font-serif text-4xl text-black">
+                    <h2 class="mt-4 font-serif text-3xl text-black sm:text-4xl">
                         {{ $namaTopik }}
                     </h2>
 
@@ -61,7 +62,7 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                     {{-- Filter topik --}}
                     <select id="filterTopik"
-                        class="rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler">
+                        class="w-full rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler sm:w-auto">
                         <option value="all">Semua Topik</option>
                         <option value="absensi">Sistem Absensi</option>
                         <option value="device">Device / Perangkat</option>
@@ -72,11 +73,11 @@
 
                     {{-- Filter tanggal --}}
                     <input type="date" id="filterTanggal"
-                        class="rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler">
+                        class="w-full rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler sm:w-auto">
                 </div>
 
                 {{-- Search --}}
-                <div class="relative w-full sm:w-72">
+                <div class="relative w-full lg:w-72">
                     <i
                         class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-black/40"></i>
                     <input type="text" id="searchInput" placeholder="Cari nama atau kata kunci..."
@@ -84,7 +85,7 @@
                 </div>
 
                 <button type="button" id="resetFilter"
-                    class="whitespace-nowrap rounded-xl border border-black/10 px-4 py-2 text-sm text-black/60 transition hover:bg-black/[0.03] plus-jakarta-sans-reguler">
+                    class="w-full whitespace-nowrap rounded-xl border border-black/10 px-4 py-2 text-sm text-black/60 transition hover:bg-black/[0.03] plus-jakarta-sans-reguler lg:w-auto">
                     Reset
                 </button>
             </div>
@@ -132,7 +133,12 @@
                         </div>
 
                         <button type="button"
-                            class="mt-5 w-full rounded-full border border-black py-2.5 text-sm font-semibold text-black transition hover:bg-black hover:text-white plus-jakarta-sans-bold">
+                            class="btn-detail mt-5 w-full rounded-full border border-black py-2.5 text-sm font-semibold text-black transition hover:bg-black hover:text-white plus-jakarta-sans-bold"
+                            data-nama="{{ $item->user->name ?? 'Anonim' }}"
+                            data-role="{{ ucfirst($item->user->role ?? 'User') }}"
+                            data-topik="{{ ucfirst($item->topik) }}" data-judul="{{ $item->judul }}"
+                            data-pesan="{{ $item->pesan }}" data-tanggal="{{ $item->created_at->format('d M Y, H:i') }}"
+                            data-bukti="{{ $item->bukti ? asset('storage/' . $item->bukti) : '' }}">
                             Lihat Detail
                         </button>
                     </div>
@@ -152,6 +158,8 @@
 
         </main>
     </div>
+
+    @include('components.dashboard.feedback.modal.detail')
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -194,6 +202,70 @@
                 filterTanggal.value = '';
                 searchInput.value = '';
                 applyFilters();
+            });
+
+            const detailModal = document.getElementById('feedbackDetailModal');
+            const detailAvatar = document.getElementById('detailAvatar');
+            const detailNama = document.getElementById('detailNama');
+            const detailRole = document.getElementById('detailRole');
+            const detailTopik = document.getElementById('detailTopik');
+            const detailJudul = document.getElementById('detailJudul');
+            const detailPesan = document.getElementById('detailPesan');
+            const detailTanggal = document.getElementById('detailTanggal');
+            const detailBuktiWrapper = document.getElementById('detailBuktiWrapper');
+            const detailBuktiLink = document.getElementById('detailBuktiLink');
+            const detailBuktiImg = document.getElementById('detailBuktiImg');
+
+            function openFeedbackDetailModal(data) {
+                detailAvatar.textContent = (data.nama || 'U').substring(0, 2).toUpperCase();
+                detailNama.textContent = data.nama || 'Anonim';
+                detailRole.textContent = data.role || 'User';
+                detailTopik.textContent = data.topik || '-';
+                detailJudul.textContent = data.judul || '-';
+                detailPesan.textContent = data.pesan || '-';
+                detailTanggal.textContent = data.tanggal || '-';
+
+                if (data.bukti) {
+                    detailBuktiWrapper.classList.remove('hidden');
+                    detailBuktiLink.href = data.bukti;
+                    detailBuktiImg.src = data.bukti;
+                } else {
+                    detailBuktiWrapper.classList.add('hidden');
+                    detailBuktiLink.href = '#';
+                    detailBuktiImg.src = '';
+                }
+
+                detailModal.classList.remove('hidden');
+                detailModal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            window.closeFeedbackDetailModal = function() {
+                detailModal.classList.add('hidden');
+                detailModal.classList.remove('flex');
+                document.body.classList.remove('overflow-hidden');
+            };
+
+            document.querySelectorAll('.btn-detail').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openFeedbackDetailModal({
+                        nama: this.dataset.nama,
+                        role: this.dataset.role,
+                        topik: this.dataset.topik,
+                        judul: this.dataset.judul,
+                        pesan: this.dataset.pesan,
+                        tanggal: this.dataset.tanggal,
+                        bukti: this.dataset.bukti,
+                    });
+                });
+            });
+
+            detailModal?.addEventListener('click', function(e) {
+                if (e.target === detailModal) closeFeedbackDetailModal();
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeFeedbackDetailModal();
             });
         });
     </script>

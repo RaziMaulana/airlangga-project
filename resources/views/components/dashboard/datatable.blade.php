@@ -169,26 +169,62 @@
     </div>
 
     @if ($presensis->hasPages())
-        <div class="mt-6 flex flex-col items-center justify-between gap-4 border-t border-black/5 pt-5 sm:flex-row">
-            <p class="text-xs text-black/60 plus-jakarta-sans-reguler">
+        <div id="paginationWrapper"
+            class="mt-6 flex flex-col items-center justify-between gap-4 border-t border-black/5 pt-5 sm:flex-row">
+            <p id="paginationInfo" class="text-xs text-black/60 plus-jakarta-sans-reguler">
                 Menampilkan <span class="font-semibold text-black">{{ $presensis->firstItem() }}</span> – <span
                     class="font-semibold text-black">{{ $presensis->lastItem() }}</span> dari <span
                     class="font-semibold text-black">{{ $presensis->total() }}</span> data
             </p>
 
             <div class="inline-flex items-center gap-1.5">
+                {{-- Tombol Previous --}}
                 @if ($presensis->onFirstPage())
                     <span
-                        class="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-black/5 px-3 py-2 text-xs font-medium text-black/40">
+                        class="inline-flex items-center rounded-xl border border-black/10 bg-black/5 px-3 py-2 text-xs font-medium text-black/40 cursor-not-allowed">
                         Prev
                     </span>
                 @else
-                    <a href="{{ $presensis->previousPageUrl() }}"
-                        class="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-medium text-black transition hover:bg-black/5">
+                    <a href="{{ $presensis->previousPageUrl() }}" data-url="{{ $presensis->previousPageUrl() }}"
+                        class="ajax-pagination-link inline-flex items-center rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-medium text-black transition hover:bg-black/5">
                         Prev
                     </a>
                 @endif
-                <!-- Silahkan tambahkan loop pagination lainnya dari original file datatable -->
+
+                {{-- Elemen Nomor Halaman Terbatas --}}
+                @php
+                    $currentPage = $presensis->currentPage();
+                    $lastPage = $presensis->lastPage();
+                    $start = max(1, $currentPage - 2);
+                    $end = min($lastPage, $currentPage + 2);
+                @endphp
+
+                @foreach ($presensis->getUrlRange($start, $end) as $page => $url)
+                    @if ($page == $currentPage)
+                        <span
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black bg-black text-xs font-semibold text-white shadow-sm">
+                            {{ $page }}
+                        </span>
+                    @else
+                        <a href="{{ $url }}" data-url="{{ $url }}"
+                            class="ajax-pagination-link inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black/10 bg-white text-xs font-medium text-black transition hover:bg-black/5">
+                            {{ $page }}
+                        </a>
+                    @endif
+                @endforeach
+
+                {{-- Tombol Next --}}
+                @if ($presensis->hasMorePages())
+                    <a href="{{ $presensis->nextPageUrl() }}" data-url="{{ $presensis->nextPageUrl() }}"
+                        class="ajax-pagination-link inline-flex items-center rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-medium text-black transition hover:bg-black/5">
+                        Next
+                    </a>
+                @else
+                    <span
+                        class="inline-flex items-center rounded-xl border border-black/10 bg-black/5 px-3 py-2 text-xs font-medium text-black/40 cursor-not-allowed">
+                        Next
+                    </span>
+                @endif
             </div>
         </div>
     @endif

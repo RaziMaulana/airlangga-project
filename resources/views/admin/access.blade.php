@@ -4,20 +4,21 @@
     <div class="flex-1 min-h-screen bg-[#F5F5F4]">
         @include('components.sidebar')
 
-        <main class="ml-64 w-[calc(100%-16rem)] p-8 lg:p-10">
+        <main class="w-full p-4 pt-20 sm:p-6 sm:pt-24 lg:ml-64 lg:w-[calc(100%-16rem)] lg:p-10">
 
-            <div class="mb-8 flex items-end justify-between">
+            <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-black/40 plus-jakarta-sans-bold">
+                    <p
+                        class="text-[10px] font-semibold uppercase tracking-[0.25em] text-black/40 plus-jakarta-sans-bold sm:text-xs">
                         Manajemen pengguna
                     </p>
-                    <h1 class="mt-1 font-serif text-4xl text-black">
+                    <h1 class="mt-1 font-serif text-3xl text-black sm:text-4xl">
                         Akses
                     </h1>
                 </div>
 
                 <button type="button" onclick="openTambahUserModal()"
-                    class="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-black/80 plus-jakarta-sans-bold">
+                    class="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-black/80 plus-jakarta-sans-bold sm:w-auto">
                     + Tambah pengguna
                 </button>
             </div>
@@ -28,7 +29,7 @@
             </div>
 
             {{-- Table --}}
-            <div class="rounded-2xl border border-black/10 bg-white p-6 shadow-sm sm:p-8">
+            <div class="overflow-x-auto rounded-2xl border border-black/10 bg-white p-4 shadow-sm sm:p-6 lg:p-8">
                 @include('components.dashboard.access.datatable')
             </div>
 
@@ -259,14 +260,29 @@
                     $('#edit_password').val('');
                     $('#edit_password_confirmation').val('');
 
+                    // Guru
                     $('#edit_nip').val(u.nip ?? '');
                     $('#edit_kelasWrapper input[name="kelas_ids[]"]').prop('checked', false);
                     (u.kelas_ids || []).forEach(function(kid) {
                         $(`#edit_kelasWrapper input[value="${kid}"]`).prop('checked', true);
                     });
 
-                    toggleRoleFields($('#edit_role'), $('#edit_guruFields'), $(
-                        '#edit_siswaFields'));
+                    // Siswa
+                    $('#edit_id_siswa').val(u.id_siswa ?? '');
+                    $('#edit_kelas_id').val(u.kelas_id ?? '');
+
+                    // Orang tua
+                    $('#edit_nama_ayah').val(u.nama_ayah ?? '');
+                    $('#edit_nama_ibu').val(u.nama_ibu ?? '');
+                    $('#edit_no_hp').val(u.no_hp ?? '');
+                    $('#edit_siswaAksesWrapper input[name="siswa_ids[]"]').prop('checked', false);
+                    (u.siswa_ids || []).forEach(function(sid) {
+                        $(`#edit_siswaAksesWrapper input[value="${sid}"]`).prop('checked',
+                            true);
+                    });
+
+                    toggleRoleFields($('#edit_role'), $('#edit_guruFields'), $('#edit_siswaFields'),
+                        $('#edit_orangtuaFields'));
 
                     $('#formEditUser').find('.error-message').remove();
                     $('#formEditUser').find('input, select').removeClass('border-red-500');
@@ -379,6 +395,8 @@
 
             function closeEditUserModal() {
                 $('#editUserModal').addClass('hidden').removeClass('flex');
+                $('#formEditUser').find('.error-message').remove();
+                $('#formEditUser').find('input, select').removeClass('border-red-500');
             }
             window.closeEditUserModal = closeEditUserModal;
         });
