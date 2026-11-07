@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 
     Route::prefix('report')->name('report')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('.index');
+        Route::get('/export', [ReportController::class, 'export'])->name('.export');
     });
 
     Route::prefix('access')->name('access')->group(function () {

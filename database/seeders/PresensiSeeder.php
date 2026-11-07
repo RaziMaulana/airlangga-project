@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Presensi;
-use App\Models\siswa;
+use App\Models\Siswa;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 
@@ -11,7 +11,8 @@ class PresensiSeeder extends Seeder
 {
     public function run(): void
     {
-        $siswas = siswa::select('uid_tag', 'id_kelas')->get();
+        // Hanya ambil siswa yang uid_tag-nya tidak null
+        $siswas = Siswa::whereNotNull('uid_tag')->select('uid_tag', 'id_kelas')->get();
         $dataPresensi = [];
 
         // Generate data presensi untuk 14 hari terakhir sampai hari ini

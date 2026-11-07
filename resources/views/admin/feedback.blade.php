@@ -62,7 +62,7 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                     {{-- Filter topik --}}
                     <select id="filterTopik"
-                        class="w-full rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler sm:w-auto">
+                        class="w-full rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler sm:w-auto cursor-pointer">
                         <option value="all">Semua Topik</option>
                         <option value="absensi">Sistem Absensi</option>
                         <option value="device">Device / Perangkat</option>
@@ -73,7 +73,7 @@
 
                     {{-- Filter tanggal --}}
                     <input type="date" id="filterTanggal"
-                        class="w-full rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler sm:w-auto">
+                        class="w-full rounded-xl border border-black/15 px-4 py-2 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler sm:w-auto cursor-pointer">
                 </div>
 
                 {{-- Search --}}
@@ -85,7 +85,7 @@
                 </div>
 
                 <button type="button" id="resetFilter"
-                    class="w-full whitespace-nowrap rounded-xl border border-black/10 px-4 py-2 text-sm text-black/60 transition hover:bg-black/[0.03] plus-jakarta-sans-reguler lg:w-auto">
+                    class="w-full whitespace-nowrap rounded-xl border border-black/10 px-4 py-2 text-sm text-black/60 transition hover:bg-black/[0.03] plus-jakarta-sans-reguler lg:w-auto cursor-pointer">
                     Reset
                 </button>
             </div>
@@ -94,53 +94,58 @@
             <div id="feedbackGrid" class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
 
                 @forelse ($feedbacks as $item)
-                    <div class="feedback-card relative overflow-hidden rounded-2xl border border-black/10 bg-white p-6 shadow-sm transition hover:shadow-md"
+                    <div class="feedback-card relative overflow-hidden rounded-2xl border border-black/10 bg-white p-6 shadow-sm transition hover:shadow-md flex flex-col justify-between"
                         data-topik="{{ $item->topik }}" data-tanggal="{{ $item->created_at->format('Y-m-d') }}"
                         data-search="{{ strtolower($item->user->name ?? 'Anonim') }} {{ strtolower($item->user->role ?? '') }} {{ strtolower($item->judul) }} {{ strtolower($item->pesan) }}">
 
-                        <div class="mb-4 flex items-center gap-3">
-                            <span
-                                class="flex h-11 w-11 items-center justify-center rounded-full bg-black text-sm font-semibold text-white plus-jakarta-sans-bold">
-                                {{ Str::of($item->user->name ?? 'U')->substr(0, 2)->upper() }}
-                            </span>
-                            <div>
-                                <p class="text-sm font-semibold text-black plus-jakarta-sans-bold">
-                                    {{ $item->user->name ?? 'Anonim' }}</p>
-                                <p class="text-xs text-black/40 plus-jakarta-sans-reguler">
-                                    {{ ucfirst($item->user->role ?? 'User') }}</p>
+                        <div>
+                            <div class="mb-4 flex items-center gap-3">
+                                <span
+                                    class="flex h-11 w-11 items-center justify-center rounded-full bg-black text-sm font-semibold text-white plus-jakarta-sans-bold">
+                                    {{ Str::of($item->user->name ?? 'U')->substr(0, 2)->upper() }}
+                                </span>
+                                <div>
+                                    <p class="text-sm font-semibold text-black plus-jakarta-sans-bold">
+                                        {{ $item->user->name ?? 'Anonim' }}</p>
+                                    <p class="text-xs text-black/40 plus-jakarta-sans-reguler">
+                                        {{ ucfirst($item->user->role ?? 'User') }}</p>
+                                </div>
                             </div>
+
+                            <p class="text-sm font-bold text-black mb-2">{{ $item->judul }}</p>
+                            <p class="text-sm leading-relaxed text-black/70 line-clamp-3 plus-jakarta-sans-reguler">
+                                {{ $item->pesan }}
+                            </p>
+
+                            {{-- Thumbnail bukti --}}
+                            @if ($item->bukti)
+                                <a href="{{ asset('storage/' . $item->bukti) }}" target="_blank"
+                                    class="mt-3 inline-flex items-center gap-2 text-xs font-medium text-black/60 underline decoration-black/30 underline-offset-4 hover:text-black hover:decoration-black plus-jakarta-sans-reguler">
+                                    <i class="fa-regular fa-image"></i>
+                                    Lihat gambar bukti
+                                </a>
+                            @endif
                         </div>
 
-                        <p class="text-sm font-bold text-black mb-2">{{ $item->judul }}</p>
-                        <p class="text-sm leading-relaxed text-black/70 line-clamp-3 plus-jakarta-sans-reguler">
-                            {{ $item->pesan }}
-                        </p>
-
-                        {{-- Thumbnail bukti --}}
-                        @if ($item->bukti)
-                            <a href="{{ asset('storage/' . $item->bukti) }}" target="_blank"
-                                class="mt-3 flex items-center gap-2 text-xs font-medium text-black/60 underline decoration-black/30 underline-offset-4 hover:text-black hover:decoration-black plus-jakarta-sans-reguler">
-                                <i class="fa-regular fa-image"></i>
-                                Lihat gambar bukti
-                            </a>
-                        @endif
-
-                        <div class="mt-5 flex items-center justify-between border-t border-black/10 pt-4">
-                            <div class="flex items-center gap-2 text-xs text-black/40 plus-jakarta-sans-reguler">
-                                <i class="fa-regular fa-clock"></i>
-                                {{ $item->created_at->format('d M Y') }}
+                        <div>
+                            <div class="mt-5 flex items-center justify-between border-t border-black/10 pt-4">
+                                <div class="flex items-center gap-2 text-xs text-black/40 plus-jakarta-sans-reguler">
+                                    <i class="fa-regular fa-clock"></i>
+                                    {{ $item->created_at->format('d M Y') }}
+                                </div>
                             </div>
-                        </div>
 
-                        <button type="button"
-                            class="btn-detail mt-5 w-full rounded-full border border-black py-2.5 text-sm font-semibold text-black transition hover:bg-black hover:text-white plus-jakarta-sans-bold"
-                            data-nama="{{ $item->user->name ?? 'Anonim' }}"
-                            data-role="{{ ucfirst($item->user->role ?? 'User') }}"
-                            data-topik="{{ ucfirst($item->topik) }}" data-judul="{{ $item->judul }}"
-                            data-pesan="{{ $item->pesan }}" data-tanggal="{{ $item->created_at->format('d M Y, H:i') }}"
-                            data-bukti="{{ $item->bukti ? asset('storage/' . $item->bukti) : '' }}">
-                            Lihat Detail
-                        </button>
+                            <button type="button"
+                                class="btn-detail mt-4 w-full rounded-full border border-black py-2.5 text-sm font-semibold text-black transition hover:bg-black hover:text-white plus-jakarta-sans-bold cursor-pointer"
+                                data-nama="{{ $item->user->name ?? 'Anonim' }}"
+                                data-role="{{ ucfirst($item->user->role ?? 'User') }}"
+                                data-topik="{{ ucfirst($item->topik) }}" data-judul="{{ $item->judul }}"
+                                data-pesan="{{ $item->pesan }}"
+                                data-tanggal="{{ $item->created_at->format('d M Y, H:i') }}"
+                                data-bukti="{{ $item->bukti ? asset('storage/' . $item->bukti) : '' }}">
+                                Lihat Detail
+                            </button>
+                        </div>
                     </div>
                 @empty
                     <p class="text-center col-span-full">Belum ada saran masuk.</p>
@@ -156,6 +161,9 @@
                     pencarian</p>
             </div>
 
+            {{-- Navigasi Paginasi Kustom --}}
+            <div id="paginationNav"></div>
+
         </main>
     </div>
 
@@ -163,47 +171,156 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.feedback-card');
+            const cards = Array.from(document.querySelectorAll('.feedback-card'));
             const filterTopik = document.getElementById('filterTopik');
             const filterTanggal = document.getElementById('filterTanggal');
             const searchInput = document.getElementById('searchInput');
             const resetBtn = document.getElementById('resetFilter');
             const emptyState = document.getElementById('emptyState');
+            const paginationNav = document.getElementById('paginationNav');
 
-            function applyFilters() {
+            let currentPage = 1;
+            const perPage = 6; // Jumlah card per halaman
+
+            function applyFiltersAndPagination() {
                 const topik = filterTopik.value;
                 const tanggal = filterTanggal.value;
                 const keyword = searchInput.value.toLowerCase().trim();
 
-                let visibleCount = 0;
-
-                cards.forEach(card => {
+                // 1. Filter data card
+                const filteredCards = cards.filter(card => {
                     const matchTopik = topik === 'all' || card.dataset.topik === topik;
                     const matchTanggal = !tanggal || card.dataset.tanggal === tanggal;
                     const matchSearch = !keyword || card.dataset.search.toLowerCase().includes(keyword);
-
-                    const visible = matchTopik && matchTanggal && matchSearch;
-                    card.style.display = visible ? '' : 'none';
-                    if (visible) visibleCount++;
+                    return matchTopik && matchTanggal && matchSearch;
                 });
 
+                const totalData = filteredCards.length;
+                const lastPage = Math.ceil(totalData / perPage) || 1;
+                if (currentPage > lastPage) currentPage = lastPage;
+
+                const start = (currentPage - 1) * perPage;
+                const end = start + perPage;
+                const paginatedCards = filteredCards.slice(start, end);
+
+                // 2. Tampilkan/Sembunyikan card berdasarkan halaman aktif
+                cards.forEach(card => card.style.display = 'none');
+                paginatedCards.forEach(card => card.style.display = '');
+
+                // 3. Atur state kosong
                 if (emptyState) {
-                    emptyState.classList.toggle('hidden', visibleCount !== 0);
-                    emptyState.classList.toggle('flex', visibleCount === 0);
+                    emptyState.classList.toggle('hidden', totalData !== 0);
+                    emptyState.classList.toggle('flex', totalData === 0);
                 }
+
+                // 4. Render Navigasi Paginasi
+                renderPagination(totalData, start + 1, Math.min(end, totalData), lastPage);
             }
 
-            filterTopik?.addEventListener('change', applyFilters);
-            filterTanggal?.addEventListener('change', applyFilters);
-            searchInput?.addEventListener('keyup', applyFilters);
+            function renderPagination(total, from, to, lastPage) {
+                if (!paginationNav) return;
+                if (total <= perPage) {
+                    paginationNav.innerHTML = '';
+                    return;
+                }
+
+                let html = `
+                <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-black/5 pt-5">
+                    <p class="text-xs text-black/60 plus-jakarta-sans-reguler text-center sm:text-left">
+                        Menampilkan <span class="font-semibold text-black">${from}</span> – <span class="font-semibold text-black">${to}</span> dari <span class="font-semibold text-black">${total}</span> data
+                    </p>
+                    <div class="flex items-center justify-center sm:justify-end gap-1.5 flex-wrap">
+                        <button data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}
+                            class="pagination-btn inline-flex h-9 items-center justify-center rounded-xl border border-black/10 bg-white px-3 text-xs font-medium text-black transition hover:bg-black/5 plus-jakarta-sans-reguler disabled:opacity-40 disabled:cursor-not-allowed shadow-sm cursor-pointer">
+                            Prev
+                        </button>`;
+
+                const delta = 2;
+                const range = [];
+                const rangeWithDots = [];
+                let l;
+
+                for (let i = 1; i <= lastPage; i++) {
+                    if (i === 1 || i === lastPage || (i >= currentPage - delta && i <= currentPage + delta)) {
+                        range.push(i);
+                    }
+                }
+
+                range.forEach(i => {
+                    if (l) {
+                        if (i - l === 2) {
+                            rangeWithDots.push(l + 1);
+                        } else if (i - l !== 1) {
+                            rangeWithDots.push('...');
+                        }
+                    }
+                    rangeWithDots.push(i);
+                    l = i;
+                });
+
+                rangeWithDots.forEach(page => {
+                    if (page === '...') {
+                        html +=
+                            `<span class="inline-flex h-9 w-9 items-center justify-center text-xs text-black/40">...</span>`;
+                    } else {
+                        const active = page === currentPage;
+                        html += `
+                        <button data-page="${page}"
+                            class="pagination-btn h-9 min-w-[2.25rem] inline-flex items-center justify-center rounded-xl px-3 text-xs transition-colors plus-jakarta-sans-reguler ${active ? 'border-black bg-black text-white font-semibold shadow-sm' : 'border border-black/10 bg-white text-black hover:bg-black/5 shadow-sm'} cursor-pointer">
+                            ${page}
+                        </button>`;
+                    }
+                });
+
+                html += `
+                        <button data-page="${currentPage + 1}" ${currentPage === lastPage ? 'disabled' : ''}
+                            class="pagination-btn inline-flex h-9 items-center justify-center rounded-xl border border-black/10 bg-white px-3 text-xs font-medium text-black transition hover:bg-black/5 plus-jakarta-sans-reguler disabled:opacity-40 disabled:cursor-not-allowed shadow-sm cursor-pointer">
+                            Next
+                        </button>
+                    </div>
+                </div>`;
+
+                paginationNav.innerHTML = html;
+
+                paginationNav.querySelectorAll('.pagination-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (this.disabled) return;
+                        currentPage = parseInt(this.dataset.page, 10);
+                        applyFiltersAndPagination();
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    });
+                });
+            }
+
+            // Event Listeners Filter
+            filterTopik?.addEventListener('change', () => {
+                currentPage = 1;
+                applyFiltersAndPagination();
+            });
+            filterTanggal?.addEventListener('change', () => {
+                currentPage = 1;
+                applyFiltersAndPagination();
+            });
+            searchInput?.addEventListener('keyup', () => {
+                currentPage = 1;
+                applyFiltersAndPagination();
+            });
 
             resetBtn?.addEventListener('click', function() {
                 filterTopik.value = 'all';
                 filterTanggal.value = '';
                 searchInput.value = '';
-                applyFilters();
+                currentPage = 1;
+                applyFiltersAndPagination();
             });
 
+            // Inisialisasi awal
+            applyFiltersAndPagination();
+
+            // Script Modal Detail
             const detailModal = document.getElementById('feedbackDetailModal');
             const detailAvatar = document.getElementById('detailAvatar');
             const detailNama = document.getElementById('detailNama');
@@ -246,18 +363,19 @@
                 document.body.classList.remove('overflow-hidden');
             };
 
-            document.querySelectorAll('.btn-detail').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-detail')) {
+                    const btn = e.target.closest('.btn-detail');
                     openFeedbackDetailModal({
-                        nama: this.dataset.nama,
-                        role: this.dataset.role,
-                        topik: this.dataset.topik,
-                        judul: this.dataset.judul,
-                        pesan: this.dataset.pesan,
-                        tanggal: this.dataset.tanggal,
-                        bukti: this.dataset.bukti,
+                        nama: btn.dataset.nama,
+                        role: btn.dataset.role,
+                        topik: btn.dataset.topik,
+                        judul: btn.dataset.judul,
+                        pesan: btn.dataset.pesan,
+                        tanggal: btn.dataset.tanggal,
+                        bukti: btn.dataset.bukti,
                     });
-                });
+                }
             });
 
             detailModal?.addEventListener('click', function(e) {
