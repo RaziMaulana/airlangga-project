@@ -1,0 +1,51 @@
+services:
+  # 1. Aplikasi Laravel (PHP-FPM)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www
+    networks:
+      - erlangga_net
+
+  # 2. Web Server Nginx (Port 8000)
+  webserver:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - erlangga_net
+
+  # 3. Database PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: erlangga
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 235711
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - erlangga_net
+
+networks:
+  erlangga_net:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
