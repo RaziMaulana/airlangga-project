@@ -34,7 +34,7 @@ class SiswaController extends Controller
     }
 
     /**
-     * Data presensi seluruh kelas milik siswa ini (bukan cuma dirinya sendiri).
+     * Data presensi seluruh kelas milik siswa ini.
      */
     public function absensiData(Request $request)
     {
@@ -56,7 +56,8 @@ class SiswaController extends Controller
             $query->whereRaw("to_char(tanggal::date, 'MM') = ?", [$bulan]);
         }
 
-        if ($request->filled('status') && in_array($request->input('status'), ['IN', 'OUT'])) {
+        // Sesuaikan dengan status: Hadir, Sakit, Izin
+        if ($request->filled('status') && in_array($request->input('status'), ['Hadir', 'Sakit', 'Izin'])) {
             $query->where('status', $request->input('status'));
         }
 
@@ -91,7 +92,7 @@ class SiswaController extends Controller
         $siswa = $this->siswaSaya();
 
         if (!$siswa->id_kelas) {
-            return response()->json(['total_siswa' => 0, 'hadir' => 0, 'pulang' => 0, 'belum_hadir' => 0]);
+            return response()->json(['total_siswa' => 0, 'hadir' => 0, 'sakit' => 0, 'izin' => 0, 'belum_hadir' => 0]);
         }
 
         $tanggal = $request->input('tanggal', now()->format('Y-m-d'));
@@ -100,21 +101,31 @@ class SiswaController extends Controller
 
         $hadir = Presensi::where('id_kelas', $siswa->id_kelas)
             ->where('tanggal', $tanggal)
-            ->where('status', 'IN')
+            ->where('status', 'Hadir')
             ->distinct('uid_tag')
             ->count('uid_tag');
 
-        $pulang = Presensi::where('id_kelas', $siswa->id_kelas)
+        $sakit = Presensi::where('id_kelas', $siswa->id_kelas)
             ->where('tanggal', $tanggal)
-            ->where('status', 'OUT')
+            ->where('status', 'Sakit')
             ->distinct('uid_tag')
             ->count('uid_tag');
+
+        $izin = Presensi::where('id_kelas', $siswa->id_kelas)
+            ->where('tanggal', $tanggal)
+            ->where('status', 'Izin')
+            ->distinct('uid_tag')
+            ->count('uid_tag');
+
+        // Perbaikan typo perhitungan belum hadir (Total Siswa - (Hadir + Sakit + Izin))
+        $belumHadir = max($totalSiswa - ($hadir + $sakit + $izin), 0);
 
         return response()->json([
             'total_siswa' => $totalSiswa,
             'hadir' => $hadir,
-            'pulang' => $pulang,
-            'belum_hadir' => max($totalSiswa - $hadir, 0),
+            'sakit' => $sakit,
+            'izin' => $izin,
+            'belum_hadir' => $belumHadir,
         ]);
     }
 }

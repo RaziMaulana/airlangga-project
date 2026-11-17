@@ -4,14 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Presensi;
-use App\Models\siswa as Siswa;
+use App\Models\Siswa;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $mode = $request->input('mode', 'single');
+        $mode = $request->input('date_mode', 'single');
 
         if ($mode === 'range' && $request->filled('start_date') && $request->filled('end_date')) {
             $startDate = Carbon::parse($request->start_date);
@@ -48,6 +48,17 @@ class DashboardController extends Controller
                 return $q->whereBetween('tanggal', [$startDateString, $endDateString]);
             })
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+                $q->where(function ($query) use ($search) {
+                    $query->whereHas('siswa', function ($subQ) use ($search) {
+                        $subQ->where('nama_siswa', 'like', "%{$search}%");
+                    })->orWhere('uid_tag', 'like', "%{$search}%")
+                        ->orWhereHas('kelas', function ($subQ) use ($search) {
+                            $subQ->where('nama_kelas', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->latest('id')
             ->paginate(10)
             ->withQueryString();
@@ -91,12 +102,12 @@ class DashboardController extends Controller
 
         if ($mode === 'single') {
             $hadirCount = Presensi::where('tanggal', $startStr)
-                ->where('status', 'IN')
+                ->where('status', 'Hadir')
                 ->distinct('uid_tag')
                 ->count('uid_tag');
 
             $terlambatCount = Presensi::where('tanggal', $startStr)
-                ->where('status', 'OUT')
+                ->where('status', 'Sakit') // atau disesuaikan jika menghitung status lain
                 ->distinct('uid_tag')
                 ->count('uid_tag');
 
@@ -106,12 +117,12 @@ class DashboardController extends Controller
             $daysDiff = $startDate->diffInDays($endDate) + 1;
 
             $hadirCount = Presensi::whereBetween('tanggal', [$startStr, $endStr])
-                ->where('status', 'IN')
+                ->where('status', 'Hadir')
                 ->distinct('uid_tag')
                 ->count('uid_tag');
 
             $terlambatCount = Presensi::whereBetween('tanggal', [$startStr, $endStr])
-                ->where('status', 'OUT')
+                ->where('status', 'Sakit')
                 ->distinct('uid_tag')
                 ->count('uid_tag');
 
@@ -120,12 +131,12 @@ class DashboardController extends Controller
         }
 
         $hadirKemarin = Presensi::whereBetween('tanggal', [$prevStartStr, $prevEndStr])
-            ->where('status', 'IN')
+            ->where('status', 'Hadir')
             ->distinct('uid_tag')
             ->count('uid_tag');
 
         $terlambatKemarin = Presensi::whereBetween('tanggal', [$prevStartStr, $prevEndStr])
-            ->where('status', 'OUT')
+            ->where('status', 'Sakit')
             ->distinct('uid_tag')
             ->count('uid_tag');
 
@@ -176,7 +187,7 @@ class DashboardController extends Controller
             $dateString = $date->toDateString();
 
             $hadirCount = Presensi::where('tanggal', $dateString)
-                ->where('status', 'IN')
+                ->where('status', 'Hadir')
                 ->distinct('uid_tag')
                 ->count('uid_tag');
 

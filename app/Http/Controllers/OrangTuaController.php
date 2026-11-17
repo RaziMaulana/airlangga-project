@@ -47,7 +47,7 @@ class OrangTuaController extends Controller
     }
 
     /**
-     * Riwayat kehadiran per hari untuk anak terpilih (jam masuk = tap IN pertama, jam pulang = tap OUT terakhir).
+     * Riwayat kehadiran per hari untuk anak terpilih.
      */
     public function absensiData(Request $request)
     {
@@ -66,14 +66,21 @@ class OrangTuaController extends Controller
             ->get();
 
         $perHari = $rows->groupBy('tanggal')->map(function ($items, $tanggal) {
-            $in = $items->where('status', 'IN')->sortBy('waktu')->first();
-            $out = $items->where('status', 'OUT')->sortByDesc('waktu')->first();
+            // Ambil data pertama sebagai jam masuk dan data terakhir sebagai jam pulang (jika ada lebih dari 1 record)
+            $first = $items->sortBy('waktu')->first();
+            $last = $items->sortByDesc('waktu')->first();
+
+            // Status bisa Hadir, Sakit, Izin, atau status dari record presensi
+            $status = $first->status ?? 'Alpa';
+            if ($status === 'Hadir' && $items->count() === 1) {
+                $status = 'Belum Pulang';
+            }
 
             return [
                 'tanggal_raw' => $tanggal,
-                'jam_masuk' => $in->waktu ?? null,
-                'jam_pulang' => $out->waktu ?? null,
-                'status' => $out ? 'Hadir' : ($in ? 'Belum Pulang' : 'Alpa'),
+                'jam_masuk' => $first->waktu ?? '-',
+                'jam_pulang' => ($items->count() > 1 && $last->waktu !== $first->waktu) ? $last->waktu : '-',
+                'status' => $status,
             ];
         })->values();
 
@@ -83,7 +90,16 @@ class OrangTuaController extends Controller
         }
 
         if ($request->filled('status') && $request->input('status') !== 'all') {
-            $perHari = $perHari->where('status', $request->input('status'))->values();
+            $filterStatus = $request->input('status');
+            $perHari = $perHari->filter(function ($r) use ($filterStatus) {
+                if ($filterStatus === 'Hadir') {
+                    return $r['status'] === 'Hadir';
+                }
+                if ($filterStatus === 'Belum Pulang') {
+                    return $r['status'] === 'Belum Pulang';
+                }
+                return $r['status'] === $filterStatus;
+            })->values();
         }
 
         if ($request->filled('search')) {
@@ -97,8 +113,8 @@ class OrangTuaController extends Controller
             return [
                 'no' => $i + 1,
                 'tanggal' => Carbon::parse($r['tanggal_raw'])->translatedFormat('d F Y'),
-                'jam_masuk' => $r['jam_masuk'] ?? '-',
-                'jam_pulang' => $r['jam_pulang'] ?? '-',
+                'jam_masuk' => $r['jam_masuk'],
+                'jam_pulang' => $r['jam_pulang'],
                 'status' => $r['status'],
             ];
         });
@@ -127,19 +143,27 @@ class OrangTuaController extends Controller
         }
 
         $hariIni = now()->format('Y-m-d');
-        $presensiHariIni = Presensi::where('uid_tag', $anak->uid_tag)->where('tanggal', $hariIni)->get();
-        $inHariIni = $presensiHariIni->where('status', 'IN')->sortBy('waktu')->first();
+        $presensiHariIni = Presensi::where('uid_tag', $anak->uid_tag)->where('tanggal', $hariIni)->orderBy('waktu')->get();
+        $inHariIni = $presensiHariIni->first();
 
         $rows = Presensi::where('uid_tag', $anak->uid_tag)->get();
         $perHari = $rows->groupBy('tanggal')->filter(function ($items, $tanggal) use ($bulan) {
             return Carbon::parse($tanggal)->month === $bulan;
         });
 
+        $totalHadir = $perHari->filter(function ($items) {
+            return $items->count() > 1 || optional($items->first())->status === 'Hadir';
+        })->count();
+
+        $belumPulang = $perHari->filter(function ($items) {
+            return $items->count() === 1;
+        })->count();
+
         return response()->json([
             'jam_masuk_hari_ini' => $inHariIni->waktu ?? null,
-            'status_hari_ini' => $inHariIni ? 'Hadir' : 'Belum Hadir',
-            'total_hadir' => $perHari->count(),
-            'belum_pulang' => $perHari->filter(fn($items) => $items->where('status', 'OUT')->isEmpty())->count(),
+            'status_hari_ini' => $inHariIni ? ($inHariIni->status ?? 'Hadir') : 'Belum Hadir',
+            'total_hadir' => $totalHadir,
+            'belum_pulang' => $belumPulang,
         ]);
     }
 }

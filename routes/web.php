@@ -58,6 +58,7 @@ Route::middleware(['auth', 'role:guru'])
         Route::get('/absensi', [GuruController::class, 'absensi'])->name('absensi.index');
         Route::get('/absensi/data', [GuruController::class, 'absensiData'])->name('absensi.data');
         Route::get('/absensi/stats', [GuruController::class, 'absensiStats'])->name('absensi.stats');
+        Route::post('/absensi/{id}/update', [GuruController::class, 'updatePresensi'])->name('absensi.update');
     });
 
 Route::prefix('siswa')

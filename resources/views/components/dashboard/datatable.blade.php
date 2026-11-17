@@ -27,8 +27,9 @@
                     <option value=""
                         {{ request('status') === null || request('status') === '' ? 'selected' : '' }}>Semua Status
                     </option>
-                    <option value="IN" {{ request('status') === 'IN' ? 'selected' : '' }}>Masuk (IN)</option>
-                    <option value="OUT" {{ request('status') === 'OUT' ? 'selected' : '' }}>Keluar (OUT)</option>
+                    <option value="Hadir" {{ request('status') === 'Hadir' ? 'selected' : '' }}>Hadir</option>
+                    <option value="Sakit" {{ request('status') === 'Sakit' ? 'selected' : '' }}>Sakit</option>
+                    <option value="Izin" {{ request('status') === 'Izin' ? 'selected' : '' }}>Izin</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-black/40">
                     <i class="fa-solid fa-chevron-down text-xs"></i>
@@ -84,7 +85,6 @@
 
     <div class="overflow-x-auto rounded-xl border border-black/5">
         <table id="attendanceTable" class="min-w-full text-left text-sm text-black whitespace-nowrap">
-            <!-- (Tabel dan isi tr sama persis seperti sebelumnya) -->
             <thead class="bg-[#F5F5F4]/50">
                 <tr class="border-b border-black/10">
                     <th
@@ -136,15 +136,20 @@
                         </td>
 
                         <td class="px-5 py-4">
-                            @if ($presensi->status === 'IN')
+                            @if ($presensi->status === 'Hadir')
                                 <span
                                     class="inline-flex items-center gap-1.5 rounded-full bg-black px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-white plus-jakarta-sans-bold shadow-sm">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-white"></span>Masuk
+                                    <span class="h-1.5 w-1.5 rounded-full bg-white"></span>Hadir
+                                </span>
+                            @elseif ($presensi->status === 'Sakit')
+                                <span
+                                    class="inline-flex items-center gap-1.5 rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide plus-jakarta-sans-bold shadow-sm">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>Sakit
                                 </span>
                             @else
                                 <span
-                                    class="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-black plus-jakarta-sans-bold shadow-sm">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-black"></span>Keluar
+                                    class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide plus-jakarta-sans-bold shadow-sm">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>Izin
                                 </span>
                             @endif
                         </td>

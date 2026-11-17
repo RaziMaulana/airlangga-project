@@ -9,11 +9,9 @@ class FeedbackController extends Controller
 {
     public function index()
     {
-        $feedbacks = Feedback::with('user')
-            ->latest()
+        $feedbacks = Feedback::latest()
             ->get();
 
-        // Label topik
         $labelTopik = [
             'absensi' => 'Sistem Absensi',
             'device' => 'Device / Perangkat',
@@ -22,13 +20,11 @@ class FeedbackController extends Controller
             'lainnya' => 'Lainnya',
         ];
 
-        // Hitung jumlah feedback per topik
         $topik = $feedbacks
             ->groupBy('topik')
             ->map(fn($items) => $items->count())
             ->sortDesc();
 
-        // Default jika belum ada feedback
         $namaTopik = 'Belum ada';
         $jumlahTopik = 0;
 

@@ -65,26 +65,30 @@ class ReportController extends Controller
                 $rekapSiswa[$siswa->uid_tag] = [
                     'nama' => $siswa->nama_siswa,
                     'presensi' => [],
-                    'total_in' => 0,
-                    'total_out' => 0,
+                    'total_hadir' => 0,
+                    'total_sakit' => 0,
+                    'total_izin' => 0,
                 ];
 
                 for ($d = 1; $d <= $daysInMonth; $d++) {
                     $tglStr = $bulanCarbon->copy()->day($d)->toDateString();
-                    $records = $presensisRaw->where('uid_tag', $siswa->uid_tag)->where('tanggal', $tglStr);
+                    $record = $presensisRaw->where('uid_tag', $siswa->uid_tag)->where('tanggal', $tglStr)->first();
 
-                    $hasIn = $records->where('status', 'IN')->isNotEmpty();
-                    $hasOut = $records->where('status', 'OUT')->isNotEmpty();
+                    $statusChar = '-';
+                    if ($record) {
+                        if ($record->status === 'Hadir') {
+                            $statusChar = 'H';
+                            $rekapSiswa[$siswa->uid_tag]['total_hadir']++;
+                        } elseif ($record->status === 'Sakit') {
+                            $statusChar = 'S';
+                            $rekapSiswa[$siswa->uid_tag]['total_sakit']++;
+                        } elseif ($record->status === 'Izin') {
+                            $statusChar = 'I';
+                            $rekapSiswa[$siswa->uid_tag]['total_izin']++;
+                        }
+                    }
 
-                    if ($hasIn)
-                        $rekapSiswa[$siswa->uid_tag]['total_in']++;
-                    if ($hasOut)
-                        $rekapSiswa[$siswa->uid_tag]['total_out']++;
-
-                    $rekapSiswa[$siswa->uid_tag]['presensi'][$d] = [
-                        'in' => $hasIn,
-                        'out' => $hasOut
-                    ];
+                    $rekapSiswa[$siswa->uid_tag]['presensi'][$d] = $statusChar;
                 }
             }
 
@@ -155,15 +159,19 @@ class ReportController extends Controller
             $table->addCell(300)->addText($d, ['bold' => true, 'size' => 8]);
         }
         $table->addCell(600)->addText('Hadir', ['bold' => true, 'size' => 8]);
+        $table->addCell(600)->addText('Sakit', ['bold' => true, 'size' => 8]);
+        $table->addCell(600)->addText('Izin', ['bold' => true, 'size' => 8]);
 
         foreach ($rekapSiswa as $data) {
             $table->addRow();
             $table->addCell(1500)->addText($data['nama'], ['size' => 8]);
             for ($d = 1; $d <= $daysInMonth; $d++) {
-                $status = $data['presensi'][$d]['in'] ? 'H' : '-';
-                $table->addCell(300)->addText($status, ['size' => 8]);
+                $statusChar = $data['presensi'][$d];
+                $table->addCell(300)->addText($statusChar, ['size' => 8]);
             }
-            $table->addCell(600)->addText($data['total_in'], ['size' => 8]);
+            $table->addCell(600)->addText($data['total_hadir'], ['size' => 8]);
+            $table->addCell(600)->addText($data['total_sakit'], ['size' => 8]);
+            $table->addCell(600)->addText($data['total_izin'], ['size' => 8]);
         }
 
         $fileName = "Laporan_Absensi_Bulanan_{$kelas->nama_kelas}_{$bulanCarbon->format('Y_m')}.docx";

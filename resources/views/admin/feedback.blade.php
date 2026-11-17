@@ -80,7 +80,7 @@
                 <div class="relative w-full lg:w-72">
                     <i
                         class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-black/40"></i>
-                    <input type="text" id="searchInput" placeholder="Cari nama atau kata kunci..."
+                    <input type="text" id="searchInput" placeholder="Cari kata kunci..."
                         class="w-full rounded-full border border-black/15 bg-white py-2 pl-9 pr-4 text-sm text-black focus:border-black focus:outline-none plus-jakarta-sans-reguler">
                 </div>
 
@@ -96,19 +96,19 @@
                 @forelse ($feedbacks as $item)
                     <div class="feedback-card relative overflow-hidden rounded-2xl border border-black/10 bg-white p-6 shadow-sm transition hover:shadow-md flex flex-col justify-between"
                         data-topik="{{ $item->topik }}" data-tanggal="{{ $item->created_at->format('Y-m-d') }}"
-                        data-search="{{ strtolower($item->user->name ?? 'Anonim') }} {{ strtolower($item->user->role ?? '') }} {{ strtolower($item->judul) }} {{ strtolower($item->pesan) }}">
+                        data-search="{{ strtolower($item->judul) }} {{ strtolower($item->pesan) }}">
 
                         <div>
                             <div class="mb-4 flex items-center gap-3">
                                 <span
                                     class="flex h-11 w-11 items-center justify-center rounded-full bg-black text-sm font-semibold text-white plus-jakarta-sans-bold">
-                                    {{ Str::of($item->user->name ?? 'U')->substr(0, 2)->upper() }}
+                                    AN
                                 </span>
                                 <div>
                                     <p class="text-sm font-semibold text-black plus-jakarta-sans-bold">
-                                        {{ $item->user->name ?? 'Anonim' }}</p>
+                                        Anonim</p>
                                     <p class="text-xs text-black/40 plus-jakarta-sans-reguler">
-                                        {{ ucfirst($item->user->role ?? 'User') }}</p>
+                                        Pengguna Rahasia</p>
                                 </div>
                             </div>
 
@@ -137,10 +137,8 @@
 
                             <button type="button"
                                 class="btn-detail mt-4 w-full rounded-full border border-black py-2.5 text-sm font-semibold text-black transition hover:bg-black hover:text-white plus-jakarta-sans-bold cursor-pointer"
-                                data-nama="{{ $item->user->name ?? 'Anonim' }}"
-                                data-role="{{ ucfirst($item->user->role ?? 'User') }}"
-                                data-topik="{{ ucfirst($item->topik) }}" data-judul="{{ $item->judul }}"
-                                data-pesan="{{ $item->pesan }}"
+                                data-nama="Anonim" data-role="Pengguna Rahasia" data-topik="{{ ucfirst($item->topik) }}"
+                                data-judul="{{ $item->judul }}" data-pesan="{{ $item->pesan }}"
                                 data-tanggal="{{ $item->created_at->format('d M Y, H:i') }}"
                                 data-bukti="{{ $item->bukti ? asset('storage/' . $item->bukti) : '' }}">
                                 Lihat Detail
@@ -180,14 +178,13 @@
             const paginationNav = document.getElementById('paginationNav');
 
             let currentPage = 1;
-            const perPage = 6; // Jumlah card per halaman
+            const perPage = 6;
 
             function applyFiltersAndPagination() {
                 const topik = filterTopik.value;
                 const tanggal = filterTanggal.value;
                 const keyword = searchInput.value.toLowerCase().trim();
 
-                // 1. Filter data card
                 const filteredCards = cards.filter(card => {
                     const matchTopik = topik === 'all' || card.dataset.topik === topik;
                     const matchTanggal = !tanggal || card.dataset.tanggal === tanggal;
@@ -203,17 +200,14 @@
                 const end = start + perPage;
                 const paginatedCards = filteredCards.slice(start, end);
 
-                // 2. Tampilkan/Sembunyikan card berdasarkan halaman aktif
                 cards.forEach(card => card.style.display = 'none');
                 paginatedCards.forEach(card => card.style.display = '');
 
-                // 3. Atur state kosong
                 if (emptyState) {
                     emptyState.classList.toggle('hidden', totalData !== 0);
                     emptyState.classList.toggle('flex', totalData === 0);
                 }
 
-                // 4. Render Navigasi Paginasi
                 renderPagination(totalData, start + 1, Math.min(end, totalData), lastPage);
             }
 
@@ -235,13 +229,12 @@
                             Prev
                         </button>`;
 
-                const delta = 2;
                 const range = [];
                 const rangeWithDots = [];
                 let l;
 
                 for (let i = 1; i <= lastPage; i++) {
-                    if (i === 1 || i === lastPage || (i >= currentPage - delta && i <= currentPage + delta)) {
+                    if (i === 1 || i === lastPage || (i >= currentPage - 2 && i <= currentPage + 2)) {
                         range.push(i);
                     }
                 }
@@ -295,7 +288,6 @@
                 });
             }
 
-            // Event Listeners Filter
             filterTopik?.addEventListener('change', () => {
                 currentPage = 1;
                 applyFiltersAndPagination();
@@ -317,10 +309,8 @@
                 applyFiltersAndPagination();
             });
 
-            // Inisialisasi awal
             applyFiltersAndPagination();
 
-            // Script Modal Detail
             const detailModal = document.getElementById('feedbackDetailModal');
             const detailAvatar = document.getElementById('detailAvatar');
             const detailNama = document.getElementById('detailNama');
@@ -334,9 +324,9 @@
             const detailBuktiImg = document.getElementById('detailBuktiImg');
 
             function openFeedbackDetailModal(data) {
-                detailAvatar.textContent = (data.nama || 'U').substring(0, 2).toUpperCase();
-                detailNama.textContent = data.nama || 'Anonim';
-                detailRole.textContent = data.role || 'User';
+                detailAvatar.textContent = "AN";
+                detailNama.textContent = "Anonim";
+                detailRole.textContent = "Pengguna Rahasia";
                 detailTopik.textContent = data.topik || '-';
                 detailJudul.textContent = data.judul || '-';
                 detailPesan.textContent = data.pesan || '-';
@@ -367,8 +357,6 @@
                 if (e.target.closest('.btn-detail')) {
                     const btn = e.target.closest('.btn-detail');
                     openFeedbackDetailModal({
-                        nama: btn.dataset.nama,
-                        role: btn.dataset.role,
                         topik: btn.dataset.topik,
                         judul: btn.dataset.judul,
                         pesan: btn.dataset.pesan,

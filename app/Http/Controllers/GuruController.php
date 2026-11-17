@@ -9,9 +9,6 @@ use Illuminate\Http\Request;
 
 class GuruController extends Controller
 {
-    /**
-     * Ambil data guru & daftar kelas_id yang sah diampu guru yang sedang login.
-     */
     private function guruDanKelasnya()
     {
         $guru = auth()->user()->guru;
@@ -35,7 +32,6 @@ class GuruController extends Controller
     {
         [$guru,] = $this->guruDanKelasnya();
 
-        // Gunakan select() agar Eloquent melakukan mapping 'id' dengan benar
         $kelasList = $guru->kelas()
             ->select('kelas.id', 'nama_kelas')
             ->orderBy('nama_kelas')
@@ -53,7 +49,6 @@ class GuruController extends Controller
 
         $kelasId = $request->input('kelas_id');
 
-        // Keamanan: guru cuma boleh lihat kelas yang memang diampunya
         if ($kelasId && !$kelasIdsGuru->contains((int) $kelasId)) {
             abort(403, 'Anda tidak memiliki akses ke kelas ini.');
         }
@@ -70,7 +65,8 @@ class GuruController extends Controller
             $query->where('tanggal', $request->input('tanggal'));
         }
 
-        if ($request->filled('status') && in_array($request->input('status'), ['IN', 'OUT'])) {
+        // Perbaikan: tambahkan 'Hadir' ke dalam daftar filter yang diizinkan
+        if ($request->filled('status') && in_array($request->input('status'), ['Hadir', 'Sakit', 'Izin'])) {
             $query->where('status', $request->input('status'));
         }
 
@@ -86,6 +82,7 @@ class GuruController extends Controller
             ->values()
             ->map(function ($p, $i) {
                 return [
+                    'id' => $p->id,
                     'no' => $i + 1,
                     'nama' => $p->siswa->nama_siswa ?? $p->uid_tag,
                     'kelas' => $p->kelas->nama_kelas ?? '-',
@@ -98,9 +95,6 @@ class GuruController extends Controller
         return response()->json(['data' => $presensis]);
     }
 
-    /**
-     * Statistik top card
-     */
     public function absensiStats(Request $request)
     {
         [, $kelasIdsGuru] = $this->guruDanKelasnya();
@@ -118,21 +112,55 @@ class GuruController extends Controller
 
         $hadir = Presensi::whereIn('id_kelas', $kelasScope)
             ->where('tanggal', $tanggal)
-            ->where('status', 'IN')
+            ->where('status', 'Hadir')
             ->distinct('uid_tag')
             ->count('uid_tag');
 
-        $pulang = Presensi::whereIn('id_kelas', $kelasScope)
+        $sakit = Presensi::whereIn('id_kelas', $kelasScope)
             ->where('tanggal', $tanggal)
-            ->where('status', 'OUT')
+            ->where('status', 'Sakit')
             ->distinct('uid_tag')
             ->count('uid_tag');
+
+        $izin = Presensi::whereIn('id_kelas', $kelasScope)
+            ->where('tanggal', $tanggal)
+            ->where('status', 'Izin')
+            ->distinct('uid_tag')
+            ->count('uid_tag');
+
+        // PERBAIKAN TYPO DI SINI (-)
+        $belumHadir = max($totalSiswa - ($hadir + $sakit + $izin), 0);
 
         return response()->json([
             'total_siswa' => $totalSiswa,
             'hadir' => $hadir,
-            'pulang' => $pulang,
-            'belum_hadir' => max($totalSiswa - $hadir, 0),
+            'sakit' => $sakit,
+            'izin' => $izin,
+            'belum_hadir' => $belumHadir,
+        ]);
+    }
+
+    public function updatePresensi(Request $request, $id)
+    {
+        [, $kelasIdsGuru] = $this->guruDanKelasnya();
+
+        $presensi = Presensi::findOrFail($id);
+
+        if (!$kelasIdsGuru->contains((int) $presensi->id_kelas)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'status' => 'required|in:Hadir,Sakit,Izin',
+        ]);
+
+        $presensi->update([
+            'status' => $request->status,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status kehadiran berhasil diperbarui.'
         ]);
     }
 }

@@ -30,17 +30,19 @@ class PresensiSeeder extends Seeder
             $tanggalString = $tanggalObj->toDateString();
 
             foreach ($siswas as $siswa) {
-                // Simulasi 95% siswa hadir (5% tidak tap / alfa)
-                if (rand(1, 100) > 95) {
-                    continue;
+                // Simulasi 90% Hadir, 5% Sakit, 5% Izin
+                $rand = rand(1, 100);
+                if ($rand <= 90) {
+                    $status = 'Hadir';
+                } elseif ($rand <= 95) {
+                    $status = 'Sakit';
+                } else {
+                    $status = 'Izin';
                 }
 
                 // Jam tap acak antara 06:30 - 07:30
                 $menitTap = rand(30, 90);
                 $waktuTap = date('H:i:s', mktime(6, $menitTap, rand(0, 59)));
-
-                // Lewat jam 07:00 (menit > 60) dianggap terlambat (OUT)
-                $status = ($menitTap > 60) ? 'OUT' : 'IN';
 
                 $dataPresensi[] = [
                     'uid_tag' => $siswa->uid_tag,
